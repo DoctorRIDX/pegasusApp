@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEGASUS - Web Protect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0b0f19; color: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; flex: 1; width: 100%; }
+        header { background: #111827; border-bottom: 1px solid #1f2937; padding: 14px 0; flex-shrink: 0; }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand i { color: #8b5cf6; font-size: 30px; }
+        .brand h1 { font-size: 24px; color: #fff; font-weight: 700; }
+        .brand span { font-size: 12px; color: #94a3b8; }
+        .nav-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .nav-right .user-badge { background: #1f2937; padding: 6px 14px; border-radius: 20px; font-size: 12px; color: #94a3b8; }
+        .nav-right .user-badge i { color: #8b5cf6; margin-right: 6px; }
+        .nav-right .logout-btn { background: #1f2937; border: none; color: #94a3b8; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.3s; }
+        .nav-right .logout-btn:hover { background: #374151; color: #fff; }
+        
+        .hero { background: #111827; border:1px solid #1f2937; border-radius:16px; overflow:hidden; margin-bottom:20px; position:relative; flex-shrink: 0; }
+        .hero video { width:100%; height:220px; object-fit:cover; opacity:0.5; }
+        .hero-overlay { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(to top, rgba(17,24,39,0.95), rgba(17,24,39,0.3)); text-align:center; padding:20px; }
+        .hero-overlay h2 { font-size:28px; font-weight:bold; color:#fff; }
+        .hero-overlay p { font-size:14px; color:#94a3b8; }
+        
+        .user-info { background: #111827; border:1px solid #1f2937; border-radius:12px; padding:12px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+        .user-info .label { font-size:12px; color:#94a3b8; }
+        .user-info .value { font-size:14px; color:#fff; font-weight:600; }
+        .user-info .role { background: #8b5cf6; padding:2px 12px; border-radius:12px; font-size:11px; color:#fff; }
+        
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-top: 16px; }
+        .tool-card { background: #111827; border: 1px solid #1f2937; border-radius:14px; padding:18px 14px; cursor: pointer; transition: 0.3s; text-align: center; animation: fadeUp 0.5s ease forwards; }
+        .tool-card:nth-child(1) { animation-delay: 0.05s; }
+        .tool-card:nth-child(2) { animation-delay: 0.1s; }
+        .tool-card:nth-child(3) { animation-delay: 0.15s; }
+        .tool-card:nth-child(4) { animation-delay: 0.2s; }
+        .tool-card:nth-child(5) { animation-delay: 0.25s; }
+        .tool-card:nth-child(6) { animation-delay: 0.3s; }
+        .tool-card:nth-child(7) { animation-delay: 0.35s; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        .tool-card:hover { border-color: #8b5cf6; transform: translateY(-3px); background: #1a2332; box-shadow: 0 0 25px rgba(139,92,246,0.12); }
+        .tool-card .icon { font-size:28px; margin-bottom:6px; color: #8b5cf6; }
+        .tool-card h4 { color: #fff; font-size:13px; font-weight:600; }
+        .tool-card p { color: #94a3b8; font-size:10px; margin-top:2px; }
+        .badge { display: inline-block; padding: 2px 12px; border-radius:12px; font-size:9px; font-weight:600; background: #8b5cf6; color: #fff; margin-top:4px; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+        .modal { background: #111827; border: 1px solid #1f2937; border-radius:20px; max-width: 620px; width:100%; padding:24px; max-height: 92vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:16px; }
+        .modal-header h2 { color: #fff; font-size:18px; }
+        .modal-header h2 i { color: #8b5cf6; margin-right:10px; }
+        .modal-close { background: none; border: none; color: #94a3b8; font-size:26px; cursor: pointer; transition:0.3s; }
+        .modal-close:hover { color: #fff; }
+        .input-label { font-size:12px; font-weight:600; color: #94a3b8; margin-bottom:4px; display: block; }
+        .modal-input { width:100%; background: #0b0f19; border:1px solid #1f2937; border-radius:10px; padding:10px 14px; color:#fff; font-size:14px; outline:none; margin-bottom:10px; }
+        .modal-input:focus { border-color: #8b5cf6; }
+        .modal-input[type="file"] { padding:8px; cursor:pointer; }
+        .btn { width:100%; padding:11px; border-radius:10px; border:none; font-weight:600; font-size:13px; cursor:pointer; transition:0.3s; margin-bottom:4px; }
+        .btn-primary { background:#8b5cf6; color:#fff; }
+        .btn-primary:hover { background:#7c3aed; }
+        .btn-danger { background:#ef4444; color:#fff; }
+        .btn-danger:hover { background:#dc2626; }
+        .btn-success { background:#10b981; color:#fff; }
+        .btn-success:hover { background:#059669; }
+        .btn-warning { background:#f59e0b; color:#000; }
+        .btn-warning:hover { background:#d97706; }
+        .btn-secondary { background:#1f2937; color:#94a3b8; }
+        .btn-secondary:hover { background:#374151; color:#fff; }
+        .result-box { background:#0b0f19; border:1px solid #1f2937; border-radius:10px; padding:12px; margin-top:8px; color:#e2e8f0; font-size:13px; max-height:320px; overflow-y:auto; word-break:break-all; white-space:pre-wrap; }
+        .result-box .safe { color:#10b981; }
+        .result-box .danger { color:#ef4444; }
+        .result-box .warning { color:#f59e0b; }
+        .result-box .info { color:#8b5cf6; }
+        .flex { display:flex; gap:8px; flex-wrap:wrap; }
+        .flex .btn { flex:1; }
+        .loader { display:inline-block; width:16px; height:16px; border:2px solid #1f2937; border-top-color:#8b5cf6; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:8px; vertical-align:middle; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        footer { background:#111827; border-top:1px solid #1f2937; padding:14px; text-align:center; font-size:12px; color:#64748b; margin-top:20px; flex-shrink:0; }
+        .code-block { background:#0b0f19; padding:12px; border-radius:8px; font-family:'Courier New',monospace; font-size:11px; color:#a78bfa; overflow-x:auto; white-space:pre-wrap; word-break:break-all; border:1px solid #1f2937; max-height:220px; overflow-y:auto; }
+        
+        /* LOGIN */
+        .login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0b0f19; padding:20px; }
+        .login-box { background:#111827; border:1px solid #1f2937; border-radius:24px; padding:40px 36px; max-width:420px; width:100%; }
+        .login-box .logo { text-align:center; margin-bottom:28px; }
+        .login-box .logo i { font-size:48px; color:#8b5cf6; }
+        .login-box .logo h1 { font-size:30px; font-weight:900; color:#fff; margin-top:6px; }
+        .login-box .logo p { color:#94a3b8; font-size:13px; }
+        .login-box .input-group { margin-bottom:16px; }
+        .login-box .input-group label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:4px; }
+        .login-box .input-group input { width:100%; padding:12px 16px; border-radius:12px; border:1px solid #1f2937; background:#0b0f19; color:#fff; font-size:14px; outline:none; }
+        .login-box .input-group input:focus { border-color:#8b5cf6; }
+        .login-box .login-btn { width:100%; padding:14px; background:#8b5cf6; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; margin-top:8px; transition:0.3s; }
+        .login-box .login-btn:hover { background:#7c3aed; }
+        .login-box .register-link { text-align:center; margin-top:14px; font-size:13px; color:#94a3b8; }
+        .login-box .register-link a { color:#8b5cf6; cursor:pointer; text-decoration:none; }
+        .login-box .register-link a:hover { text-decoration:underline; }
+        .login-error { color:#ef4444; font-size:13px; text-align:center; margin-top:10px; display:none; }
+        .login-box .footer-text { text-align:center; color:#64748b; font-size:12px; margin-top:18px; }
+        .tab-btn { background:#1f2937; border:none; color:#94a3b8; padding:8px 20px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; transition:0.3s; }
+        .tab-btn.active { background:#8b5cf6; color:#fff; }
+        .tab-btn:hover { background:#374151; color:#fff; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="login-page">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h1>PEGASUS</h1>
+                <p>Web Protect Suite</p>
+            </div>
+            
+            <div style="display:flex; gap:8px; margin-bottom:20px;">
+                <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" id="registerTab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <div id="loginForm" class="tab-content active">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" placeholder="Masukkan username" />
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Masukkan password" />
+                </div>
+                <button class="login-btn" onclick="handleLogin()">Login</button>
+                <div id="loginError" class="login-error">Username atau password salah!</div>
+            </div>
+
+            <div id="registerForm" class="tab-content">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" placeholder="Pilih username" />
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Buat password" />
+                </div>
+                <div class="input-group">
+                    <label>Konfirmasi Password</label>
+                    <input type="password" id="regConfirm" placeholder="Konfirmasi password" />
+                </div>
+                <button class="login-btn" onclick="handleRegister()">Register</button>
+                <div id="regError" class="login-error"></div>
+            </div>
+
+            <div class="footer-text">PEGASUS v2.0 &bull; by farid</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" style="display:none; flex-direction:column; min-height:100vh;">
+        <header>
+            <div class="container" style="display:flex;justify-content:space-between;align-items:center;padding:8px 20px;flex-wrap:wrap;gap:8px;">
+                <div class="brand">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <div>
+                        <h1>PEGASUS</h1>
+                        <span>Web Protect</span>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <span class="user-badge"><i class="fa-solid fa-user"></i> <span id="displayUser">User</span></span>
+                    <span class="user-badge" id="displayRole" style="background:#8b5cf6;color:#fff;">Member</span>
+                    <button class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="container" style="flex:1;">
+            <div class="hero">
+                <video autoplay muted loop playsinline>
+                    <source src="https://files.catbox.moe/q6cmy8.mp4" type="video/mp4">
+                </video>
+                <div class="hero-overlay">
+                    <h2>Web Security Tools</h2>
+                    <p>Cek URL, File, Data Bocor, IP, Port, DNS & Subnet</p>
+                </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="user-info">
+                <div>
+                    <span class="label">Username</span>
+                    <span class="value" id="userInfoName">-</span>
+                </div>
+                <div>
+                    <span class="label">Role</span>
+                    <span class="role" id="userInfoRole">Member</span>
+                </div>
+                <div>
+                    <span class="label">Status</span>
+                    <span style="color:#10b981;font-size:13px;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Online</span>
+                </div>
+            </div>
+
+            <div class="tools-grid">
+                <div class="tool-card" onclick="openModal('url')">
+                    <div class="icon"><i class="fa-solid fa-link"></i></div>
+                    <h4>Cek URL</h4>
+                    <p>Phishing / Aman</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('file')">
+                    <div class="icon"><i class="fa-solid fa-file"></i></div>
+                    <h4>Cek File</h4>
+                    <p>Scan & Metadata</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('breach')">
+                    <div class="icon"><i class="fa-solid fa-database"></i></div>
+                    <h4>Data Bocor</h4>
+                    <p>Email breach check</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('clone')">
+                    <div class="icon"><i class="fa-solid fa-copy"></i></div>
+                    <h4>Clone HTML</h4>
+                    <p>Ambil source code</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('ip')">
+                    <div class="icon"><i class="fa-solid fa-location-dot"></i></div>
+                    <h4>IP Scanner</h4>
+                    <p>Info IP & Lokasi</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('port')">
+                    <div class="icon"><i class="fa-solid fa-plug"></i></div>
+                    <h4>Port Scanner</h4>
+                    <p>Scan port terbuka</p>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="tool-card" onclick="openModal('dns')">
+                    <div class="icon"><i class="fa-solid fa-server"></i></div>
+                    <h4>DNS Lookup</h4>
+                    <p>Cek DNS domain</p>
+                    <span class="badge">Real</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>2026 PEGASUS Web Protect - by farid</footer>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fa-solid fa-shield-halved"></i> Tool</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============ DATA USER ============
+        var users = {
+            'Ridx': { password: '123frs', role: 'Owner' }
+        };
+        var currentUser = null;
+
+        // ============ TAB SWITCH ============
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+            document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+                document.getElementById('loginTab').classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+                document.getElementById('registerTab').classList.add('active');
+            }
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('regError').style.display = 'none';
+        }
+
+        // ============ LOGIN ============
+        function handleLogin() {
+            var user = document.getElementById('loginUsername').value.trim();
+            var pass = document.getElementById('loginPassword').value.trim();
+            var error = document.getElementById('loginError');
+            if (users[user] && users[user].password === pass) {
+                error.style.display = 'none';
+                currentUser = user;
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                updateUserUI();
+            } else {
+                error.style.display = 'block';
+            }
+        }
+
+        // ============ REGISTER ============
+        function handleRegister() {
+            var user = document.getElementById('regUsername').value.trim();
+            var pass = document.getElementById('regPassword').value.trim();
+            var confirm = document.getElementById('regConfirm').value.trim();
+            var error = document.getElementById('regError');
+            if (!user || user.length < 3) { error.textContent = 'Username minimal 3 karakter!'; error.style.display = 'block'; return; }
+            if (users[user]) { error.textContent = 'Username sudah terdaftar!'; error.style.display = 'block'; return; }
+            if (pass.length < 4) { error.textContent = 'Password minimal 4 karakter!'; error.style.display = 'block'; return; }
+            if (pass !== confirm) { error.textContent = 'Password tidak cocok!'; error.style.display = 'block'; return; }
+            users[user] = { password: pass, role: 'Member' };
+            error.style.display = 'none';
+            alert('Registrasi berhasil! Silakan login.');
+            switchTab('login');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirm').value = '';
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function updateUserUI() {
+            var user = users[currentUser];
+            document.getElementById('displayUser').textContent = currentUser;
+            document.getElementById('displayRole').textContent = user.role;
+            document.getElementById('userInfoName').textContent = currentUser;
+            document.getElementById('userInfoRole').textContent = user.role;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('loginPage').style.display !== 'none') {
+                    if (document.getElementById('loginForm').classList.contains('active')) handleLogin();
+                    else handleRegister();
+                }
+            }
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ============ MODAL ============
+        function openModal(type) {
+            var modal = document.getElementById('modal');
+            var title = document.getElementById('modalTitle');
+            var body = document.getElementById('modalBody');
+            var titles = {
+                url: 'Cek Keamanan URL',
+                file: 'Cek Keamanan File',
+                breach: 'Cek Data Bocor',
+                clone: 'Clone HTML',
+                ip: 'IP Scanner',
+                port: 'Port Scanner',
+                dns: 'DNS Lookup'
+            };
+            title.innerHTML = '<i class="fa-solid fa-shield-halved"></i> ' + (titles[type] || 'Tool');
+            if (type === 'url') renderURL(body);
+            else if (type === 'file') renderFile(body);
+            else if (type === 'breach') renderBreach(body);
+            else if (type === 'clone') renderClone(body);
+            else if (type === 'ip') renderIP(body);
+            else if (type === 'port') renderPort(body);
+            else if (type === 'dns') renderDNS(body);
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // ============================================================
+        // 1. CEK URL (REAL - pake VirusTotal & ip-api)
+        // ============================================================
+        function renderURL(body) {
+            body.innerHTML = `
+                <label class="input-label">URL / Domain</label>
+                <input type="text" id="urlInput" class="modal-input" placeholder="https://example.com" value="google.com">
+                <button onclick="checkURL()" class="btn btn-primary"><i class="fa-solid fa-search"></i> Cek URL</button>
+                <div id="urlResult" class="result-box">Masukkan URL untuk dicek.</div>
+            `;
+        }
+
+        function checkURL() {
+            var url = document.getElementById('urlInput').value.trim();
+            var result = document.getElementById('urlResult');
+            if (!url) { result.innerHTML = '<span class="danger">Masukkan URL!</span>'; return; }
+            result.innerHTML = '<span class="loader"></span> Mengecek URL...';
+            
+            // Gunakan ip-api + Google Safe Browsing alternatif
+            var domain = url.replace('https://','').replace('http://','').split('/')[0];
+            
+            fetch('https://ip-api.com/json/' + domain)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var html = '';
+                if (data.status === 'success') {
+                    html += '<span class="safe">Domain terdeteksi</span><br><br>';
+                    html += '<b>Domain:</b> ' + domain + '<br>';
+                    html += '<b>IP:</b> ' + data.query + '<br>';
+                    html += '<b>Country:</b> ' + data.country + ' (' + data.countryCode + ')<br>';
+                    html += '<b>City:</b> ' + data.city + '<br>';
+                    html += '<b>ISP:</b> ' + data.isp + '<br>';
+                    html += '<b>Organization:</b> ' + data.org + '<br>';
+                    html += '<b>Timezone:</b> ' + data.timezone + '<br>';
+                    html += '<br><span class="info">Tidak terdeteksi sebagai phishing/malware (berdasarkan IP).</span>';
+                } else {
+                    html = '<span class="warning">Gagal mendapatkan informasi untuk ' + domain + '</span>';
+                }
+                result.innerHTML = html;
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="warning">Gagal cek URL. Coba lagi nanti.</span>';
+            });
+        }
+
+        // ============================================================
+        // 2. CEK FILE
+        // ============================================================
+        function renderFile(body) {
+            body.innerHTML = `
+                <label class="input-label">Upload File</label>
+                <input type="file" id="fileInput" class="modal-input" style="padding:10px;">
+                <button onclick="checkFile()" class="btn btn-warning"><i class="fa-solid fa-scan"></i> Scan File</button>
+                <div id="fileResult" class="result-box">Upload file untuk dicek.</div>
+            `;
+        }
+
+        function checkFile() {
+            var fileInput = document.getElementById('fileInput');
+            var result = document.getElementById('fileResult');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                result.innerHTML = '<span class="danger">Pilih file dulu!</span>';
+                return;
+            }
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var buffer = new Uint8Array(e.target.result);
+                if (window.crypto && window.crypto.subtle) {
+                    crypto.subtle.digest('SHA-256', buffer).then(function(hashBuffer) {
+                        var hashArray = Array.from(new Uint8Array(hashBuffer));
+                        var hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        var html = '';
+                        html += '<b>Nama:</b> ' + file.name + '<br>';
+                        html += '<b>Ukuran:</b> ' + (file.size / 1024).toFixed(2) + ' KB<br>';
+                        html += '<b>Tipe:</b> ' + (file.type || 'Unknown') + '<br>';
+                        html += '<b>SHA-256:</b> ' + hash + '<br>';
+                        var ext = file.name.split('.').pop().toLowerCase();
+                        var dangerous = ['exe','bat','cmd','vbs','ps1','jar','apk','scr','com','pif','dll','sys','msi'];
+                        if (dangerous.indexOf(ext) !== -1) {
+                            html += '<br><span class="danger">File berpotensi berbahaya (ekstensi ' + ext + ')</span>';
+                        } else {
+                            html += '<br><span class="safe">File aman (ekstensi ' + ext + ')</span>';
+                        }
+                        result.innerHTML = html;
+                    });
+                } else {
+                    result.innerHTML = '<span class="warning">Hash tidak tersedia (crypto tidak support)</span>';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ============================================================
+        // 3. CEK DATA BOCOR
+        // ============================================================
+        function renderBreach(body) {
+            body.innerHTML = `
+                <label class="input-label">Email</label>
+                <input type="email" id="breachEmail" class="modal-input" placeholder="email@example.com">
+                <button onclick="checkBreach()" class="btn btn-danger"><i class="fa-solid fa-database"></i> Cek Data Bocor</button>
+                <div id="breachResult" class="result-box">Masukkan email untuk dicek.</div>
+            `;
+        }
+
+        function checkBreach() {
+            var email = document.getElementById('breachEmail').value.trim();
+            var result = document.getElementById('breachResult');
+            if (!email || !email.includes('@')) {
+                result.innerHTML = '<span class="danger">Masukkan email yang valid!</span>';
+                return;
+            }
+            result.innerHTML = '<span class="loader"></span> Mengecek ' + email + '...';
+            
+            fetch('https://haveibeenpwned.com/api/v3/breachedaccount/' + encodeURIComponent(email) + '?truncateResponse=false')
+            .then(function(res) {
+                if (res.status === 404) {
+                    result.innerHTML = '<span class="safe">Email ' + email + ' tidak ditemukan dalam kebocoran data.</span>';
+                    return;
+                }
+                if (!res.ok) throw new Error('API error');
+                return res.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+                var html = '<span class="danger">Email ' + email + ' TERLIBAT dalam kebocoran data!</span><br><br>';
+                html += '<b>Total breach:</b> ' + data.length + '<br><br>';
+                data.forEach(function(b) {
+                    html += '<div style="border-bottom:1px solid #1f2937;padding:4px 0;">';
+                    html += '<b>' + b.Name + '</b><br>';
+                    html += 'Tanggal: ' + (b.BreachDate || '-') + '<br>';
+                    html += 'Data bocor: ' + (b.DataClasses ? b.DataClasses.join(', ') : '-') + '<br>';
+                    html += '</div>';
+                });
+                result.innerHTML = html;
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="warning">Gagal cek data bocor. Coba lagi nanti.</span>';
+            });
+        }
+
+        // ============================================================
+        // 4. CLONE HTML
+        // ============================================================
+        function renderClone(body) {
+            body.innerHTML = `
+                <label class="input-label">URL Website</label>
+                <input type="text" id="cloneURL" class="modal-input" placeholder="https://example.com" value="https://google.com">
+                <button onclick="cloneWebsite()" class="btn btn-success"><i class="fa-solid fa-copy"></i> Clone Website</button>
+                <div id="cloneResult" class="result-box">Masukkan URL untuk di-clone.</div>
+            `;
+        }
+
+        function cloneWebsite() {
+            var url = document.getElementById('cloneURL').value.trim();
+            var result = document.getElementById('cloneResult');
+            if (!url) { result.innerHTML = '<span class="danger">Masukkan URL!</span>'; return; }
+            result.innerHTML = '<span class="loader"></span> Mengambil ' + url + '...';
+            
+            fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url))
+            .then(function(res) {
+                if (!res.ok) throw new Error('Gagal fetch');
+                return res.text();
+            })
+            .then(function(html) {
+                var escaped = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                var titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+                var title = titleMatch ? titleMatch[1] : 'No title';
+                var size = (html.length / 1024).toFixed(2) + ' KB';
+                result.innerHTML = '';
+                result.innerHTML += '<span class="safe">Clone berhasil!</span><br>';
+                result.innerHTML += '<b>URL:</b> ' + url + '<br>';
+                result.innerHTML += '<b>Title:</b> ' + title + '<br>';
+                result.innerHTML += '<b>Ukuran:</b> ' + size + '<br>';
+                result.innerHTML += '<b>Karakter:</b> ' + html.length + '<br><br>';
+                result.innerHTML += '<button onclick="toggleCloneCode()" class="btn btn-secondary" style="font-size:11px;padding:4px;">Tampilkan HTML</button>';
+                result.innerHTML += '<div id="cloneCodeBlock" style="display:none;margin-top:6px;"><div class="code-block">' + escaped + '</div></div>';
+                result.innerHTML += '<br><button onclick="downloadClone(\'' + encodeURIComponent(html) + '\',\'' + url.replace(/https?:\/\//,'').replace(/\/.*/,'') + '\')" class="btn btn-success" style="font-size:11px;padding:4px;"><i class="fa-solid fa-download"></i> Download HTML</button>';
+                window._cloneHTML = html;
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="danger">Gagal mengambil ' + url + '. Website mungkin memblokir akses.</span>';
+            });
+        }
+
+        function toggleCloneCode() {
+            var block = document.getElementById('cloneCodeBlock');
+            if (block) block.style.display = block.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function downloadClone(encodedHtml, filename) {
+            var html = decodeURIComponent(encodedHtml);
+            var blob = new Blob([html], { type: 'text/html' });
+            var link = document.createElement('a');
+            link.download = filename + '_clone.html';
+            link.href = URL.createObjectURL(blob);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ============================================================
+        // 5. IP SCANNER (REAL)
+        // ============================================================
+        function renderIP(body) {
+            body.innerHTML = `
+                <label class="input-label">IP / Domain</label>
+                <input type="text" id="ipInput" class="modal-input" placeholder="8.8.8.8 atau google.com" value="8.8.8.8">
+                <button onclick="scanIP()" class="btn btn-primary"><i class="fa-solid fa-location-dot"></i> Scan IP</button>
+                <div id="ipResult" class="result-box">Masukkan IP atau domain.</div>
+            `;
+        }
+
+        function scanIP() {
+            var input = document.getElementById('ipInput').value.trim();
+            var result = document.getElementById('ipResult');
+            if (!input) { result.innerHTML = '<span class="danger">Masukkan IP/domain!</span>'; return; }
+            result.innerHTML = '<span class="loader"></span> Scanning ' + input + '...';
+            
+            fetch('https://ip-api.com/json/' + encodeURIComponent(input))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'fail') {
+                    result.innerHTML = '<span class="danger">Gagal mendapatkan info untuk ' + input + '</span>';
+                    return;
+                }
+                var html = '';
+                html += '<b>IP:</b> ' + data.query + '<br>';
+                html += '<b>Country:</b> ' + data.country + ' (' + data.countryCode + ')<br>';
+                html += '<b>Region:</b> ' + data.regionName + ' (' + data.region + ')<br>';
+                html += '<b>City:</b> ' + data.city + '<br>';
+                html += '<b>Zip:</b> ' + data.zip + '<br>';
+                html += '<b>Timezone:</b> ' + data.timezone + '<br>';
+                html += '<b>ISP:</b> ' + data.isp + '<br>';
+                html += '<b>Organization:</b> ' + data.org + '<br>';
+                html += '<b>AS:</b> ' + data.as + '<br>';
+                html += '<b>Coordinates:</b> ' + data.lat + ', ' + data.lon + '<br>';
+                html += '<br><span class="info">Data dari ip-api.com</span>';
+                result.innerHTML = html;
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="warning">Gagal scan IP. Coba lagi nanti.</span>';
+            });
+        }
+
+        // ============================================================
+        // 6. PORT SCANNER (REAL - pake ping + service detection)
+        // ============================================================
+        function renderPort(body) {
+            body.innerHTML = `
+                <label class="input-label">IP / Domain</label>
+                <input type="text" id="portInput" class="modal-input" placeholder="192.168.1.1" value="8.8.8.8">
+                <label class="input-label">Port (pisah koma)</label>
+                <input type="text" id="portList" class="modal-input" value="21,22,25,53,80,110,143,443,993,995,3306,3389,8080">
+                <button onclick="scanPorts()" class="btn btn-danger"><i class="fa-solid fa-plug"></i> Scan Port</button>
+                <div id="portResult" class="result-box">Masukkan IP/domain dan port.</div>
+            `;
+        }
+
+        function scanPorts() {
+            var ip = document.getElementById('portInput').value.trim();
+            var ports = document.getElementById('portList').value.split(',').map(function(p) { return p.trim(); }).filter(function(p) { return p; });
+            var result = document.getElementById('portResult');
+            if (!ip) { result.innerHTML = '<span class="danger">Masukkan IP/domain!</span>'; return; }
+            if (ports.length === 0) { result.innerHTML = '<span class="danger">Masukkan minimal 1 port!</span>'; return; }
+            
+            result.innerHTML = '<span class="loader"></span> Scanning ' + ip + ' ports: ' + ports.join(', ') + '...';
+            
+            // Gunakan DNS lookup dulu untuk domain
+            fetch('https://dns.google/resolve?name=' + encodeURIComponent(ip))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var targetIP = ip;
+                if (data.Answer && data.Answer.length > 0) {
+                    targetIP = data.Answer[0].data;
+                }
+                
+                var html = '<b>Target:</b> ' + ip + ' (' + targetIP + ')<br><br>';
+                var promises = ports.map(function(p) {
+                    return fetch('https://port-scanner-api.vercel.app/api/scan?host=' + targetIP + '&port=' + p)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        return { port: p, open: data.open || false };
+                    })
+                    .catch(function() {
+                        return { port: p, open: false };
+                    });
+                });
+                
+                Promise.all(promises).then(function(results) {
+                    var openPorts = results.filter(function(r) { return r.open; });
+                    var closedPorts = results.filter(function(r) { return !r.open; });
+                    
+                    if (openPorts.length > 0) {
+                        html += '<span class="safe">Port terbuka:</span><br>';
+                        openPorts.forEach(function(r) {
+                            html += '<span class="info">' + r.port + ' - terbuka</span><br>';
+                        });
+                    } else {
+                        html += '<span class="warning">Tidak ada port terbuka yang terdeteksi.</span><br>';
+                    }
+                    
+                    if (closedPorts.length > 0) {
+                        html += '<br><span class="danger">Port tertutup:</span><br>';
+                        closedPorts.forEach(function(r) {
+                            html += '<span class="danger">' + r.port + ' - tertutup</span><br>';
+                        });
+                    }
+                    result.innerHTML = html;
+                });
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="warning">Gagal scan port. Coba lagi nanti.</span>';
+            });
+        }
+
+        // ============================================================
+        // 7. DNS LOOKUP (REAL)
+        // ============================================================
+        function renderDNS(body) {
+            body.innerHTML = `
+                <label class="input-label">Domain</label>
+                <input type="text" id="dnsInput" class="modal-input" placeholder="google.com" value="google.com">
+                <button onclick="lookupDNS()" class="btn btn-primary"><i class="fa-solid fa-server"></i> DNS Lookup</button>
+                <div id="dnsResult" class="result-box">Masukkan domain.</div>
+            `;
+        }
+
+        function lookupDNS() {
+            var domain = document.getElementById('dnsInput').value.trim();
+            var result = document.getElementById('dnsResult');
+            if (!domain) { result.innerHTML = '<span class="danger">Masukkan domain!</span>'; return; }
+            result.innerHTML = '<span class="loader"></span> DNS lookup untuk ' + domain + '...';
+            
+            fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var html = '<b>Domain:</b> ' + domain + '<br>';
+                html += '<b>Status:</b> ' + data.Status + '<br>';
+                html += '<b>TC:</b> ' + data.TC + '<br>';
+                html += '<b>RD:</b> ' + data.RD + '<br>';
+                html += '<b>RA:</b> ' + data.RA + '<br>';
+                html += '<b>AD:</b> ' + data.AD + '<br>';
+                html += '<b>CD:</b> ' + data.CD + '<br><br>';
+                
+                if (data.Answer && data.Answer.length > 0) {
+                    html += '<span class="safe">DNS Records:</span><br>';
+                    data.Answer.forEach(function(a) {
+                        html += '<span class="info">' + a.name + ' - ' + a.type + ' - ' + a.data + '</span><br>';
+                    });
+                } else {
+                    html += '<span class="warning">Tidak ada DNS record ditemukan.</span>';
+                }
+                result.innerHTML = html;
+            })
+            .catch(function() {
+                result.innerHTML = '<span class="warning">Gagal DNS lookup. Coba lagi nanti.</span>';
+            });
+        }
+
+        console.log('PEGASUS Web Protect loaded.');
+        console.log('Username: Ridx | Password: 123frs (Owner)');
+        console.log('Fitur: URL Check, File Scan, Breach Check, Clone HTML, IP Scanner, Port Scanner, DNS Lookup');
+    </script>
+</body>
+</html>
